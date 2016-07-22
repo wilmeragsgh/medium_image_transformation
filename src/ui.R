@@ -25,48 +25,56 @@ ui <- shinyUI(
                 background-image: url('texturebg.png');
                 padding: 1%"
            ),
-        sidebarLayout(sidebarPanel(
+        fluidRow(
+            column(
                        width=3,
                        style = 'align: center; text-align: center',
-                       fileInput(inputId = 'files', 
+                       wellPanel(fileInput(inputId = 'files', 
                            label = 'Select an Image',
                            accept=c('image/bmp', 'image/bmp','.bmp')
                            ),
                        actionButton('reloadInput',
                                     'Reload image',
-                                    icon = icon('refresh')),
+                                    icon = icon('refresh'))),
                        hr(),
-                       h5('Negative:',
-                          style = 'font-weight: 700; text-align: center'
-                       ),
-                       actionButton(
-                           'negativeT',
-                           'Go!',
-                           icon = icon('adjust')
-                       ),
-                       hr(),
-                       sliderInput(
-                           "degrees", 
-                           "Rotation:",
-                           min=-270, 
-                           max=270, 
-                           value=0,
-                           step = 90
-                       ),
-                       hr(),
-                       h5('Mirroring:',
-                          style = 'font-weight: 700; text-align: center'
-                       ),
-                       fluidRow(
-                           actionButton('mirrorV',
-                                        'V',
-                                        icon = icon('arrows-v')
-                           ),
-                           actionButton('mirrorH',
-                                        'H',
-                                        icon = icon('arrows-h')
-                           )
-                       ),
+                       h4('Transformations',style = 'font-weight: 700; text-align: center'),
+                       wellPanel(tabsetPanel(tabPanel('Basic',
+                                            h5('Negative:',
+                                               style = 'font-weight: 700; text-align: center'
+                                            ),
+                                            actionButton(
+                                                'negativeT',
+                                                'Go!',
+                                                icon = icon('adjust')
+                                            ),
+                                            hr(),
+                                            sliderInput(
+                                                "degrees", 
+                                                "Rotation:",
+                                                min=-270, 
+                                                max=270, 
+                                                value=0,
+                                                step = 90
+                                            ),
+                                            hr(),
+                                            h5('Mirroring:',
+                                               style = 'font-weight: 700; text-align: center'
+                                            ),
+                                            fluidRow(
+                                                actionButton('mirrorV',
+                                                             'V',
+                                                             icon = icon('arrows-v')
+                                                ),
+                                                actionButton('mirrorH',
+                                                             'H',
+                                                             icon = icon('arrows-h')
+                                                )
+                                            )),
+                                   tabPanel('Inter',
+                                            h5('Zoom:',
+                                               style = 'font-weight: 700; text-align: center'
+                                            )),
+                                   tabPanel('Adv'))),
                        hr(),
                        h6('Save to ./output.bmp:',
                           style = 'font-weight: 700; text-align: center'
@@ -75,12 +83,13 @@ ui <- shinyUI(
                                       '',
                                       icon = icon('archive'),width = "30%")
                    ),
-                   mainPanel(uiOutput(
-                       'images',
-                       style = 'overflow: auto;'
-                   ),width = 9
-            )),
-        hr(),
-        tableOutput('hdr')
+                   column(
+                          uiOutput(
+                              'images',
+                              style = 'overflow: auto;'),
+                          hr(),
+                          tableOutput('hdr'),
+                          width = 9
+            ))
     )
 )

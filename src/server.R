@@ -47,7 +47,7 @@ shinyServer(function(input, output) {
         headr <- cbind(headr,height = readBin(arc,what = integer(),size = 4))
         headr <- cbind(headr,colourPlanes = readBin(arc,what = integer(),size = 2))
         headr <- cbind(headr,bitsPerPixel = readBin(arc,what = integer(),size = 2))
-        headr <- cbind(headr,compressionType = readBin(arc,what = integer(),size = 4))
+        readBin(arc,what = integer(),size = 4)
         headr <- cbind(headr,imageSize = readBin(arc,what = integer(),size = 4))
         headr <- cbind(headr,xResolution = readBin(arc,what = integer(),size = 4))
         headr <- cbind(headr,yResolution = readBin(arc,what = integer(),size = 4))
@@ -91,7 +91,9 @@ shinyServer(function(input, output) {
 # reload image:      
       observe({
           if(input$reloadInput == 0 || is.null(input$files)) return(NULL)
-          assign('currentImage',value = files()$datapath,envir = e1)
+          withProgress(message = 'Reloading image...',{
+              assign('currentImage',value = files()$datapath,envir = e1)
+              })
           local({
               #
               output[['image1']] <- 
@@ -106,8 +108,10 @@ shinyServer(function(input, output) {
 # image negative:
       observe({
           if(input$negativeT == 0 || is.null(input$files)) return(NULL)
-          route <- .Call('negativeTransformation',get('currentImage',envir = e1))
-          assign('currentImage',value = route,envir = e1)
+          withProgress(message = 'Creating negative...',{
+              route <- .Call('negativeTransformation',get('currentImage',envir = e1))
+              assign('currentImage',value = route,envir = e1)
+          })
           local({
               #print(route)
               output[['image1']] <- 
@@ -121,8 +125,10 @@ shinyServer(function(input, output) {
 # image mirrorV:
       observe({
           if(input$mirrorV == 0 || is.null(input$files)) return(NULL)
-          route <- .Call('mirrorTransformationV',get('currentImage',envir = e1))
-          assign('currentImage',value = route,envir = e1)
+          withProgress(message = 'Vertical-mirroring image...',{
+              route <- .Call('mirrorTransformationV',get('currentImage',envir = e1))
+              assign('currentImage',value = route,envir = e1)
+          })
           local({
               #print(route)
               output[['image1']] <- 
@@ -136,8 +142,10 @@ shinyServer(function(input, output) {
 # image mirrorH:
       observe({
           if(input$mirrorH == 0 || is.null(input$files)) return(NULL)
-          route <- .Call('mirrorTransformationH',get('currentImage',envir = e1))
-          assign('currentImage',value = route,envir = e1)
+          withProgress(message = 'Horizotal-mirroring image...', {
+              route <- .Call('mirrorTransformationH',get('currentImage',envir = e1))
+              assign('currentImage',value = route,envir = e1)
+          })
           local({
               #print(route)
               output[['image1']] <- 
@@ -154,8 +162,10 @@ shinyServer(function(input, output) {
           dg <- input$degrees
           trueDegree <- ifelse(dg <0,dg + 360,dg)
           nSteps <- trueDegree/90
-          route <- .Call('rotateTransformation',get('currentImage',envir = e1),nSteps)
-          assign('currentImage',value = route,envir = e1)
+          withProgress(message = paste("Rotating image ",dg,' degrees',sep = ''),{
+              route <- .Call('rotateTransformation',get('currentImage',envir = e1),nSteps)
+              assign('currentImage',value = route,envir = e1)
+          })
           local({
               #print(route)
               output[['image1']] <- 
