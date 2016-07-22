@@ -1,23 +1,30 @@
 library('Rcpp')
 
-#system('export PKG_CXXFLAGS=`Rscript -e "Rcpp:::CxxFlags()"`')
-#system('export PKG_LIBS=`Rscript -e "Rcpp:::LdFlags()"`')
-
-# export PKG_LIBS=`pkg-config --libs opencv` `Rscript -e 'Rcpp:::LdFlags()'`
-# export PKG_CFLAGS=`pkg-config --cflags opencv`
-# export PKG_CXXFLAGS=`pkg-config --cflags opencv` `Rscript -e 'Rcpp:::CxxFlags()'`
-    # R CMD SHLIB build/negativeT.cpp
-Sys.setenv("PKG_LIBS" ="`pkg-config --libs opencv` `Rscript -e 'Rcpp:::LdFlags()' -fopenmp -lgomp`")
-Sys.setenv("PKG_CFLAGS" ="`pkg-config --cflags opencv`")
-Sys.setenv("PKG_CXXFLAGS"="`pkg-config --cflags opencv` `Rscript -e 'Rcpp:::CxxFlags()' -fopenmp`")
-
+#system("export PKG_LIBS=`pkg-config --libs opencv` `R -e 'Rcpp:::LdFlags()' -fopenmp -lgomp`")
+#system("export PKG_CFLAGS=`pkg-config --cflags opencv`")
+#system("export PKG_CXXFLAGS=`pkg-config --cflags opencv` `R -e 'Rcpp:::CxxFlags()' -fopenmp`")
+#system("R CMD SHLIB ../build/negativeT.cpp")
+#system("R CMD SHLIB ../build/mirrorTV.cpp")
+#system("R CMD SHLIB ../build/mirrorTH.cpp")
+#system("R CMD SHLIB ../build/rotateT.cpp")
 cat('Wait for it...')
-sourceCpp('../build/negativeT.cpp')
-sourceCpp('../build/mirrorTV.cpp')
-sourceCpp('../build/mirrorTH.cpp')
-sourceCpp('../build/rotateT.cpp')
+setwd('..')
+dyn.load('build/negativeT.so')
+dyn.load('build/mirrorTV.so')
+dyn.load('build/mirrorTH.so')
+dyn.load('build/rotateT.so')
+setwd('src')
+#Sys.setenv("PKG_LIBS" ="`pkg-config --libs opencv` `Rscript -e 'Rcpp:::LdFlags()' -fopenmp -lgomp`")
+#Sys.setenv("PKG_CFLAGS" ="`pkg-config --cflags opencv`")
+#Sys.setenv("PKG_CXXFLAGS"="`pkg-config --cflags opencv` `Rscript -e 'Rcpp:::CxxFlags()' -fopenmp`")
+
+#cat('Wait for it...')
+#sourceCpp('../build/negativeT.cpp')
+#sourceCpp('../build/mirrorTV.cpp')
+#sourceCpp('../build/mirrorTH.cpp')
+#sourceCpp('../build/rotateT.cpp')
 cat('it\'s alive!')
-#dyn.load('../build/negativeT.so')
+#
 
 options(shiny.maxRequestSize=40*1024^2)
 e1 <- new.env(parent = .GlobalEnv)

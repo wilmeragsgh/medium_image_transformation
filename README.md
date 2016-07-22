@@ -1,5 +1,15 @@
-# Basic Image Transformations
-Shiny app for basic image transformation (negative,rotate,mirroring).
+# Mid Image Transformations
+Shiny app to allow the performing of the following tasks over an image in '.bmp' format:
+* Show it's metadata.
+* Show it's histogram.
+* Ecualize it.
+* Apply mirroring effect.
+* Transform it to it's negative.
+* Modify it's brightness and contrast.
+* Umbralization given a threshold.
+* Scaling and rotation of the image.
+* Nearest and bilinear interpolation.
+* Zoom in / out.
 
 ### Prerequisities
 
@@ -37,7 +47,7 @@ R -e 'install.packages(c('shiny','Rcpp'))'
 
 To run the app you just
 ```
-R -e "shiny::runGitHub('pdi_homework-1','wilmeragsgh',subdir = 'src')"
+R -e "shiny::runGitHub('pdi_homework-2','wilmeragsgh',subdir = 'src')"
 ```
 Then you should see:
 ```
