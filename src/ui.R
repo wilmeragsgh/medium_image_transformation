@@ -57,6 +57,24 @@ ui <- shinyUI(
                                                 step = 90
                                             ),
                                             hr(),
+                                            sliderInput(
+                                                "scalev", 
+                                                "Scaling ver:",
+                                                min=0, 
+                                                max=270, 
+                                                value=0,
+                                                step = 90
+                                            ),
+                                            hr(),
+                                            sliderInput(
+                                                "scaleh", 
+                                                "Scaling hor:",
+                                                min=0, 
+                                                max=270, 
+                                                value=0,
+                                                step = 90
+                                            ),
+                                            hr(),
                                             h5('Mirroring:',
                                                style = 'font-weight: 700; text-align: center'
                                             ),
@@ -69,12 +87,9 @@ ui <- shinyUI(
                                                              'H',
                                                              icon = icon('arrows-h')
                                                 )
-                                            )),
-                                   tabPanel('Inter',
-                                            h5('Zoom:',
-                                               style = 'font-weight: 700; text-align: center'
-                                            )),
-                                   tabPanel('Adv'))),
+                                            ))
+                                            )
+                                 ),
                        hr(),
                        h6('Save to ./output.bmp:',
                           style = 'font-weight: 700; text-align: center'
@@ -83,13 +98,39 @@ ui <- shinyUI(
                                       '',
                                       icon = icon('archive'),width = "30%")
                    ),
-                   column(
-                          uiOutput(
-                              'images',
-                              style = 'overflow: auto;'),
-                          hr(),
-                          tableOutput('hdr'),
-                          width = 9
-            ))
+                   column(width = 9, 
+                          tabsetPanel(
+                              tabPanel('Image',
+                                       uiOutput('images', 
+                                                style = 'overflow:auto'),
+                                       hr(),
+                                       tableOutput('hdr')),
+                              tabPanel('Zoom',
+                                       fluidRow(column(width = 6,
+                                                       plotOutput("plot2", height = 100,
+                                                                  brush = brushOpts(
+                                                                      id = "plot2_brush",
+                                                                      resetOnNew = TRUE)
+                                                                  )
+                                                       ),
+                                                column(width = 6,
+                                                       plotOutput("plot3", height = 100)
+                                                      )
+                                                )
+                                       ),
+                              tabPanel('Histogram',
+                                       conditionalPanel('input.loadHist == 0',
+                                                        actionButton('loadHist',
+                                                                     'Load histogram',
+                                                                     icon = icon('bar-chart'))),
+                                       conditionalPanel('input.loadHist > 0',
+                                                        actionButton('reloadHist',
+                                                                     'Reload histogram',
+                                                                     icon = icon('refresh'))),
+                                       plotOutput("hist0"),
+                                       fluidRow(column(width = 4,plotOutput("hist1", height = 300)),column(width = 4,plotOutput("hist2", height = 300)),column(width = 4,plotOutput("hist3", height = 300))))
+                              )
+                          )
+            )
     )
 )

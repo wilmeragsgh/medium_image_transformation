@@ -1,8 +1,10 @@
-library('Rcpp')
+lib('Rcpp')
+lib('ggplot2')
 
 ##system("export PKG_LIBS=`pkg-config --libs opencv` `R -e 'Rcpp:::LdFlags()' -fopenmp -lgomp`")
 ##system("export PKG_CFLAGS=`pkg-config --cflags opencv`")
 ##system("export PKG_CXXFLAGS=`pkg-config --cflags opencv` `R -e 'Rcpp:::CxxFlags()' -fopenmp`")
+# To compile:
 #Sys.setenv("PKG_LIBS" ="`pkg-config --libs opencv` `Rscript -e 'Rcpp:::LdFlags()' -fopenmp -lgomp`")
 #Sys.setenv("PKG_CFLAGS" ="`pkg-config --cflags opencv`")
 #Sys.setenv("PKG_CXXFLAGS"="`pkg-config --cflags opencv` `Rscript -e 'Rcpp:::CxxFlags()' -fopenmp`")
@@ -10,12 +12,14 @@ library('Rcpp')
 #system("R CMD SHLIB ../build/mirrorTV.cpp")
 #system("R CMD SHLIB ../build/mirrorTH.cpp")
 #system("R CMD SHLIB ../build/rotateT.cpp")
+#system("R CMD SHLIB ../build/histD.cpp")
 cat('Wait for it...')
 setwd('..')
 dyn.load('build/negativeT.so')
 dyn.load('build/mirrorTV.so')
 dyn.load('build/mirrorTH.so')
 dyn.load('build/rotateT.so')
+dyn.load('build/histD.so')
 setwd('src')
 
 #cat('Wait for it...')
@@ -54,6 +58,8 @@ shinyServer(function(input, output) {
         headr <- cbind(headr,nColors = readBin(arc,what = integer(),size = 4))
         headr <- cbind(headr,impColors = readBin(arc,what = integer(),size = 4))
         close(arc)
+        assign('width',value = headr[,'width'],envir = e1)
+        assign('height',value = headr[,'height'],envir = e1)
         output$hdr <- renderTable(as.data.frame(headr))
         #files$negativeTransfCount <- input$negativeT
         #files$mirrorHTransfCount <- input$mirrorH
@@ -79,6 +85,7 @@ shinyServer(function(input, output) {
       observe({
           if(is.null(input$files)) return(NULL)
           assign('currentImage',value = files()$datapath,envir = e1)
+          imgHist <- .Call('histData',get('currentImage',envir = e1))
           local({
               output[['image1']] <- 
                   renderImage({
@@ -113,7 +120,6 @@ shinyServer(function(input, output) {
               assign('currentImage',value = route,envir = e1)
           })
           local({
-              #print(route)
               output[['image1']] <- 
                   renderImage({
                       list(src = route,
@@ -130,7 +136,6 @@ shinyServer(function(input, output) {
               assign('currentImage',value = route,envir = e1)
           })
           local({
-              #print(route)
               output[['image1']] <- 
                   renderImage({
                       list(src = route,
@@ -147,7 +152,6 @@ shinyServer(function(input, output) {
               assign('currentImage',value = route,envir = e1)
           })
           local({
-              #print(route)
               output[['image1']] <- 
                   renderImage({
                       list(src = route,
@@ -167,7 +171,6 @@ shinyServer(function(input, output) {
               assign('currentImage',value = route,envir = e1)
           })
           local({
-              #print(route)
               output[['image1']] <- 
                   renderImage({
                       list(src = route,
@@ -176,6 +179,108 @@ shinyServer(function(input, output) {
           })
       })
 #/
+# image histogram:
+## first time:
+      observeEvent(input$loadHist, {
+          withProgress(message = 'Creating histogram...',{
+              imgHist <- .Call('histData',get('currentImage',envir = e1))
+              if (length(imgHist) == (get('width',envir = e1) * get('height',envir = e1))){
+                  local({
+                      output[['hist0']] <- 
+                          renderPlot({
+                              ggplot() + geom_histogram(aes(imgHist),binwidth = 1)
+                          })
+                  })
+              }else{
+                  local({
+                      output[['hist1']] <- 
+                          renderPlot({
+                              ggplot() + geom_histogram(aes(imgHist[seq(1,length(imgHist),3)]),fill = 'red',binwidth = 1) + xlab('red') + ylab('count')
+                          })
+                      output[['hist2']] <- 
+                          renderPlot({
+                              ggplot() + geom_histogram(aes(imgHist[seq(2,length(imgHist),3)]),fill = 'green',binwidth = 1) + xlab('green') + ylab('count')
+                          })
+                      output[['hist3']] <- 
+                          renderPlot({
+                              ggplot() + geom_histogram(aes(imgHist[seq(3,length(imgHist),3)]),fill = 'blue',binwidth = 1) + xlab('blue') + ylab('count')
+                          })
+                  })
+              }
+          })
+      })
+#/
+## reloadding 
+      observeEvent(input$reloadHist, {
+          withProgress(message = 'Creating histogram...',{
+              imgHist <- .Call('histData',get('currentImage',envir = e1))
+              if (length(imgHist) == (get('width',envir = e1) * get('height',envir = e1))){
+                  local({
+                      output[['hist0']] <- 
+                          renderPlot({
+                              ggplot() + geom_histogram(aes(imgHist),binwidth = 1) + xlab('intensity') + ylab('count')
+                          })
+                      output[['hist1']] <- 
+                          renderPlot({
+                              plot.new()
+                          })
+                      output[['hist2']] <- 
+                          renderPlot({
+                              plot.new()
+                          })
+                      output[['hist3']] <- 
+                          renderPlot({
+                              plot.new()
+                          })
+                  })
+              }else{
+                  local({
+                      output[['hist0']] <- 
+                          renderPlot({
+                              plot.new()
+                          })
+                      tags$style(HTML('#hist0{hidden:TRUE}'))
+                      output[['hist1']] <- 
+                          renderPlot({
+                              ggplot() + geom_histogram(aes(imgHist[seq(1,length(imgHist),3)], fill = 'red'),binwidth = 1) + xlab('red') + ylab('count')
+                          })
+                      output[['hist2']] <- 
+                          renderPlot({
+                              ggplot() + geom_histogram(aes(imgHist[seq(2,length(imgHist),3)], fill = 'green'),binwidth = 1) + xlab('green') + ylab('count')
+                          })
+                      output[['hist3']] <- 
+                          renderPlot({
+                              ggplot() + geom_histogram(aes(imgHist[seq(3,length(imgHist),3)], fill = 'blue'),binwidth = 1) + xlab('blue') + ylab('count')
+                          })
+                  })
+              }
+          })
+      })
+# zoom:
+      ranges2 <- reactiveValues(x = NULL, y = NULL)
+      
+      output$plot2 <- renderPlot({
+          ggimage(array(1:4,dim = c(2,4,3)))
+      })
+      
+      output$plot3 <- renderPlot({
+          ggimage(array(1:4,dim = c(2,4,3))) +
+              coord_cartesian(xlim = ranges2$x, ylim = ranges2$y)
+      })
+      
+      # When a double-click happens, check if there's a brush on the plot.
+      # If so, zoom to the brush bounds; if not, reset the zoom.
+      observe({
+          brush <- input$plot2_brush
+          if (!is.null(brush)) {
+              ranges2$x <- c(brush$xmin, brush$xmax)
+              ranges2$y <- c(brush$ymin, brush$ymax)
+              
+          } else {
+              ranges2$x <- NULL
+              ranges2$y <- NULL
+          }
+      })
 # downloader:
       observe({
           if(input$exportImage == 0) return(NULL)
@@ -186,3 +291,5 @@ shinyServer(function(input, output) {
       })
 #/
     })
+
+# ggimage(array(1:8,dim = c(2,4,3)))
