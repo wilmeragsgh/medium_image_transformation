@@ -14,6 +14,12 @@ ui <- shinyUI(
                      max-height: 540px;
                      height: 100% !important;
                      width: 100%;
+                    }
+                    #loadHist{
+                     margin-top: 4%;
+                    }
+                    #reloadHist{
+                     margin-top: 4%;
                     }")
                 )
             ),
@@ -38,8 +44,7 @@ ui <- shinyUI(
                                     icon = icon('refresh'))),
                        hr(),
                        h4('Transformations',style = 'font-weight: 700; text-align: center'),
-                       wellPanel(tabsetPanel(tabPanel('Basic',
-                                            h5('Negative:',
+                       wellPanel(h5('Negative:',
                                                style = 'font-weight: 700; text-align: center'
                                             ),
                                             actionButton(
@@ -87,8 +92,25 @@ ui <- shinyUI(
                                                              'H',
                                                              icon = icon('arrows-h')
                                                 )
-                                            ))
-                                            )
+                                            ),
+                                            hr(),
+                                            h5('Equalization:',
+                                               style = 'font-weight: 700; text-align: center'
+                                            ),
+                                            actionButton(
+                                                'equalizationB',
+                                                'Go!',
+                                                icon = icon('bars')
+                                            ),
+                                            hr(),
+                                            sliderInput(
+                                                "bright", 
+                                                "Brightness:",
+                                                min=-255, 
+                                                max=255, 
+                                                value=0,
+                                                step = 1
+                                 )
                                  ),
                        hr(),
                        h6('Save to ./output.bmp:',
@@ -119,14 +141,17 @@ ui <- shinyUI(
                                                 )
                                        ),
                               tabPanel('Histogram',
-                                       conditionalPanel('input.loadHist == 0',
-                                                        actionButton('loadHist',
-                                                                     'Load histogram',
-                                                                     icon = icon('bar-chart'))),
-                                       conditionalPanel('input.loadHist > 0',
-                                                        actionButton('reloadHist',
-                                                                     'Reload histogram',
-                                                                     icon = icon('refresh'))),
+                                       column(width = 3,offset = 5,
+                                              conditionalPanel('input.loadHist == 0',
+                                                               actionButton('loadHist',
+                                                                            'Load histogram',
+                                                                            icon = icon('bar-chart'))),
+                                              conditionalPanel('input.loadHist > 0',
+                                                               actionButton('reloadHist',
+                                                                            'Reload histogram',
+                                                                            icon = icon('refresh'))),
+                                              hr()
+                                              ),
                                        plotOutput("hist0"),
                                        fluidRow(column(width = 4,plotOutput("hist1", height = 300)),column(width = 4,plotOutput("hist2", height = 300)),column(width = 4,plotOutput("hist3", height = 300))))
                               )

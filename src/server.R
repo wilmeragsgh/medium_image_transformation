@@ -13,6 +13,8 @@ lib('ggplot2')
 #system("R CMD SHLIB ../build/mirrorTH.cpp")
 #system("R CMD SHLIB ../build/rotateT.cpp")
 #system("R CMD SHLIB ../build/histD.cpp")
+#system("R CMD SHLIB ../build/equalizationI.cpp")
+#system("R CMD SHLIB ../build/brightnessI.cpp")
 cat('Wait for it...')
 setwd('..')
 dyn.load('build/negativeT.so')
@@ -20,6 +22,8 @@ dyn.load('build/mirrorTV.so')
 dyn.load('build/mirrorTH.so')
 dyn.load('build/rotateT.so')
 dyn.load('build/histD.so')
+dyn.load('build/equalizationI.so')
+dyn.load('build/brightnessI.so')
 setwd('src')
 
 #cat('Wait for it...')
@@ -179,6 +183,23 @@ shinyServer(function(input, output) {
           })
       })
 #/
+# image bright:
+      observe({
+          if(input$bright == 0 || is.null(input$files)) return(NULL)
+          withProgress(message = 'Making it brighter!',{
+              route <- .Call('brightnessI',get('currentImage',envir = e1),input$bright)
+              assign('currentImage',value = route,envir = e1)
+          })
+          local({
+              output[['image1']] <- 
+                  renderImage({
+                      list(src = route,
+                           alt = "Image failed to render")
+                  }, deleteFile = F)
+          })
+      })
+#/
+      
 # image histogram:
 ## first time:
       observeEvent(input$loadHist, {
@@ -256,6 +277,22 @@ shinyServer(function(input, output) {
               }
           })
       })
+# image equalization:
+      observe({
+          if(input$equalizationB == 0 || is.null(input$files)) return(NULL)
+          withProgress(message = 'Equalizing image...',{
+              route <- .Call('equalizationI',get('currentImage',envir = e1))
+              assign('currentImage',value = route,envir = e1)
+          })
+          local({
+              output[['image1']] <- 
+                  renderImage({
+                      list(src = route,
+                           alt = "Image failed to render")
+                  }, deleteFile = F)
+          })
+      })
+#/
 # zoom:
       ranges2 <- reactiveValues(x = NULL, y = NULL)
       
