@@ -40,7 +40,6 @@ RcppExport SEXP equalizationI(SEXP f1) {
         {
             histogram[i] = 0;
         }
-        
         // calculate the no of pixels for each intensity values
         for(int y = 0; y < height; y++)
             for(int x = 0; x < width; x++)
@@ -101,7 +100,7 @@ RcppExport SEXP equalizationI(SEXP f1) {
         for(int y = 0; y < height; y++)
             for(int x = 0; x < width; x++)
                 for(k = 0; k < channels; k++)
-                im1.at<uchar>(y,x) = saturate_cast<uchar>(SkRGB[im.at<uchar>(y,x)][k]);
+                im1.at<Vec3b>(y,x)[k] = saturate_cast<uchar>(SkRGB[im.at<Vec3b>(y,x)[k]][k]);
     }
     // reverse image 
 //#pragma omp parallel for collapse(3)

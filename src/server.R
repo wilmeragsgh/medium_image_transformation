@@ -203,7 +203,7 @@ shinyServer(function(input, output) {
 # image histogram:
 ## first time:
       observeEvent(input$loadHist, {
-          withProgress(message = 'Creating histogram...',{
+          withProgress(message = 'Creating histogram...',detail = 'this may take a while (please wait!)',{
               imgHist <- .Call('histData',get('currentImage',envir = e1))
               if (length(imgHist) == (get('width',envir = e1) * get('height',envir = e1))){
                   local({
@@ -233,7 +233,7 @@ shinyServer(function(input, output) {
 #/
 ## reloadding 
       observeEvent(input$reloadHist, {
-          withProgress(message = 'Creating histogram...',{
+          withProgress(message = 'Creating histogram...',detail = 'this may take a while (please wait!)',{
               imgHist <- .Call('histData',get('currentImage',envir = e1))
               if (length(imgHist) == (get('width',envir = e1) * get('height',envir = e1))){
                   local({
@@ -260,18 +260,17 @@ shinyServer(function(input, output) {
                           renderPlot({
                               plot.new()
                           })
-                      tags$style(HTML('#hist0{hidden:TRUE}'))
                       output[['hist1']] <- 
                           renderPlot({
-                              ggplot() + geom_histogram(aes(imgHist[seq(1,length(imgHist),3)], fill = 'red'),binwidth = 1) + xlab('red') + ylab('count')
+                              ggplot() + geom_histogram(aes(imgHist[seq(1,length(imgHist),3)]), fill = 'red',binwidth = 1) + xlab('red') + ylab('count')
                           })
                       output[['hist2']] <- 
                           renderPlot({
-                              ggplot() + geom_histogram(aes(imgHist[seq(2,length(imgHist),3)], fill = 'green'),binwidth = 1) + xlab('green') + ylab('count')
+                              ggplot() + geom_histogram(aes(imgHist[seq(2,length(imgHist),3)]), fill = 'green',binwidth = 1) + xlab('green') + ylab('count')
                           })
                       output[['hist3']] <- 
                           renderPlot({
-                              ggplot() + geom_histogram(aes(imgHist[seq(3,length(imgHist),3)], fill = 'blue'),binwidth = 1) + xlab('blue') + ylab('count')
+                              ggplot() + geom_histogram(aes(imgHist[seq(3,length(imgHist),3)]), fill = 'blue',binwidth = 1) + xlab('blue') + ylab('count')
                           })
                   })
               }
