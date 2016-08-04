@@ -103,6 +103,14 @@ ui <- shinyUI(
                                                 icon = icon('bars')
                                             ),
                                             hr(),
+                                             sliderInput("slider2",label = 'Umbralization:' ,min = 0, max = 255, 
+                                                         value = c(0, 255)),
+                                             actionButton(
+                                             'umbralizationI',
+                                             'Go!',
+                                             icon = icon('bars')
+                                             ),
+                                             hr(),
                                             sliderInput(
                                                 "bright", 
                                                 "Brightness:",

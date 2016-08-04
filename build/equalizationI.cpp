@@ -8,6 +8,14 @@
 #include "opencv2/highgui/highgui.hpp"
 
 using namespace cv;
+static float Min(float a, float b) {
+    return a <= b ? a : b;
+}
+
+static float Max(float a, float b) {
+    return a >= b ? a : b;
+}
+
 // [[Rcpp::export]]
 RcppExport SEXP equalizationI(SEXP f1) {
     std::string fname = Rcpp::as<std::string>(f1); 
@@ -32,7 +40,7 @@ RcppExport SEXP equalizationI(SEXP f1) {
     data      = (uchar *)img->imageData;  
     Mat im = img;
     Mat im1 = im.clone();
-    uchar *new_data;
+    uchar *aux_to_ycbcr;
     if(channels == 1){
         int histogram[256];
         // initialize all intensity values to 0
@@ -65,42 +73,47 @@ RcppExport SEXP equalizationI(SEXP f1) {
                 im1.at<uchar>(y,x) = saturate_cast<uchar>(Sk[im.at<uchar>(y,x)]);
     }
     else{
-        int histogramRGB[256][3];
+        int histogramY[256];
         // initialize all intensity values to 0
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(1)
         for(i = 0; i < 256; i++)
-            for(j = 0; j < 3; j++)
-                histogramRGB[i][j] = 0;
+                histogramY[i] = 0;
         
         // calculate the no of pixels for each intensity values
 #pragma omp parallel for collapse(3)        
-        for(i=0;i<height;i++) 
-            for(j=0;j<width;j++)
-                for(k=0;k<channels;k++)
-                    histogramRGB[data[i*step+j*channels+k]][k]++;
+        for(i=0;i<height;i++){
+            for(j=0;j<width;j++){
+                aux_to_ycbcr[i*step+j*channels + 0] = (float)(0.2989 * (data[i*step+j*channels+0]/255) + 0.5866 * (data[i*step+j*channels+1]/255) + 0.1145 * (data[i*step+j*channels+2]/255)); // Y channel
+                aux_to_ycbcr[i*step+j*channels + 1] = (float)(-0.1687 * (data[i*step+j*channels+0]/255) - 0.3313 * (data[i*step+j*channels+1]/255) + 0.5000 * (data[i*step+j*channels+2]/255)); // Cb channel
+                aux_to_ycbcr[i*step+j*channels + 2] = (float)(0.5000 * (data[i*step+j*channels+0]/255) - 0.4184 * (data[i*step+j*channels+1]/255) - 0.0816 * (data[i*step+j*channels+2]/255)); // Cr channel
+                histogramY[aux_to_ycbcr[i*step+j*channels + 0]]++;
+            }
+        }
 
         int size = width * height;
         float alpha = 255.0 / size;
-        int cumhistogramRGB[256][3];
-        cumhistogramRGB[0][0] = histogramRGB[0][0];
-        cumhistogramRGB[0][1] = histogramRGB[0][1];
-        cumhistogramRGB[0][2] = histogramRGB[0][2];
-#pragma omp parallel for collapse(2)
+        int cumhistogramY[256];
+        cumhistogramY[0] = histogramY[0];
+        
+#pragma omp parallel for collapse(1)
         for( i = 1; i < 256; i++)
-            for(j = 0;j<3;j++)
-                cumhistogramRGB[i][j] = histogramRGB[i][j] + cumhistogramRGB[i-1][j];
+                cumhistogramY[i] = histogramY[i] + cumhistogramY[i-1];
         // Scale the histogram
-        int SkRGB[256][3];
-#pragma omp parallel for collapse(2)
+        int SkY[256];
+#pragma omp parallel for collapse(1)
         for( i = 0; i < 256; i++)
-            for( j = 0; j < 3; j++)
-                SkRGB[i][j] = cvRound((double)cumhistogramRGB[i][j] * alpha);
+            SkY[i] = cvRound((double)cumhistogramY[i] * alpha);
 
-#pragma omp parallel for collapse(3)
-        for(int y = 0; y < height; y++)
-            for(int x = 0; x < width; x++)
-                for(k = 0; k < channels; k++)
-                im1.at<Vec3b>(y,x)[k] = saturate_cast<uchar>(SkRGB[im.at<Vec3b>(y,x)[k]][k]);
+        uchar new_y;
+#pragma omp parallel for collapse(2)
+        for(int y = 0; y < height; y++){
+            for(int x = 0; x < width; x++){
+                new_y = saturate_cast<uchar>(SkY[aux_to_ycbcr[i*step+j*channels + 0]]);
+                im1.at<Vec3b>(y, x)[0] = (unsigned char)(255 * Max(0.0f, Min(1.0f, (float)(new_y + 0.0000 * aux_to_ycbcr[i*step+j*channels + 1] + 1.4022 * aux_to_ycbcr[i*step+j*channels + 2]))));
+                im1.at<Vec3b>(y, x)[1] = (unsigned char)(255 * Max(0.0f, Min(1.0f, (float)(new_y - 0.3456 * aux_to_ycbcr[i*step+j*channels + 1] - 0.7145 * aux_to_ycbcr[i*step+j*channels + 2]))));
+                im1.at<Vec3b>(y, x)[2] = (unsigned char)(255 * Max(0.0f, Min(1.0f, (float)(new_y + 1.7710 * aux_to_ycbcr[i*step+j*channels + 1] + 0.0000 * aux_to_ycbcr[i*step+j*channels + 2]))));
+            }
+        }
     }
     // reverse image 
 //#pragma omp parallel for collapse(3)

@@ -15,6 +15,8 @@ lib('ggplot2')
 #system("R CMD SHLIB ../build/histD.cpp")
 #system("R CMD SHLIB ../build/equalizationI.cpp")
 #system("R CMD SHLIB ../build/brightnessI.cpp")
+#system("R CMD SHLIB ../build/umbralizationI.cpp")
+
 cat('Wait for it...')
 setwd('..')
 dyn.load('build/negativeT.so')
@@ -24,6 +26,8 @@ dyn.load('build/rotateT.so')
 dyn.load('build/histD.so')
 dyn.load('build/equalizationI.so')
 dyn.load('build/brightnessI.so')
+dyn.load('build/umbralizationI.so')
+
 setwd('src')
 
 #cat('Wait for it...')
@@ -71,6 +75,7 @@ shinyServer(function(input, output) {
         #files$rotateTransCount <- input$degrees
         files
     })
+    
     
       output$images <- renderUI({
         if(is.null(input$files)) return(NULL)
@@ -199,7 +204,25 @@ shinyServer(function(input, output) {
           })
       })
 #/
-      
+
+# image umbralization:
+      observe({
+          if(input$umbralizationI == 0 || is.null(input$files)) return(NULL)
+          withProgress(message = 'umbralizing...',{
+              route <- .Call('umbralizationI',get('currentImage',envir = e1),input$slider2[1],input$slider2[2])
+              print(input$slider2[1])
+              print(input$slider2[2])
+              assign('currentImage',value = route,envir = e1)
+          })
+          local({
+              output[['image1']] <- 
+                  renderImage({
+                      list(src = route,
+                           alt = "Image failed to render")
+                  }, deleteFile = F)
+          })
+      })
+#/
 # image histogram:
 ## first time:
       observeEvent(input$loadHist, {
